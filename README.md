@@ -13,4 +13,4 @@ Than, you can just run it and start chatting in your terminal after inputting yo
         )
 ```
 Finally, you can see the chat UI in the terminal like follow image.
-![image.png]
+![image](image.png)
