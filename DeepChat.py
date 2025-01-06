@@ -1,11 +1,9 @@
 from openai import OpenAI
 from prompt_toolkit import PromptSession
 from prompt_toolkit.styles import Style
-from words import WORDS
-
-# from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.history import FileHistory
+from prompt_toolkit import print_formatted_text
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 import os
@@ -43,7 +41,7 @@ class DeepChat:
         """
         # Initialize the OpenAI client with API key and base URL
         client = OpenAI(
-            api_key="xxx",
+            api_key="sk-1bbdf27b31ff40f385c6b3b54f8c16d2",
             base_url="https://api.deepseek.com",
         )
         # Request the chat completion response
@@ -54,8 +52,8 @@ class DeepChat:
             temperature=1.0,
             max_tokens=8192,
         )
-        assistant_reply = ""
         print("agent: ", end="", flush=True)
+        assistant_reply = ""
 
         # Iterate over each chunk of the response from the assistant
         for chunk in response:
@@ -85,13 +83,17 @@ class History:
         self.conversation_history = [
             {"role": "system", "content": "You are a helpful assistant."}
         ]
-        self.completer = WordCompleter(WORDS)
+
+
+class Interaction:
+    def __init__(self):
+        self.completer = WordCompleter(
+            words=self.load_words("/home/stray2714/Programming/python/words_alpha.txt")
+        )
 
         # Define a custom style for prompt display
         self.custom_style = Style.from_dict(
-            {
-                "prompt": "fg:ansiblue bold",
-            }
+            {"prompt": "fg:ansiblue bold", "label": "fg:ansiblue bold"}
         )
         history_file = os.path.expanduser("~/AppData/Local/cache/.deep-seek-history")
         os.makedirs(os.path.dirname(history_file), exist_ok=True)
@@ -99,7 +101,6 @@ class History:
         self.session = PromptSession(
             "deep-chat> ",
             multiline=True,
-            # key_bindings=kb,
             history=FileHistory(history_file),
             completer=self.completer,
             auto_suggest=AutoSuggestFromHistory(),
@@ -108,6 +109,12 @@ class History:
                 '<b><style bg="ansired">Press "q" to quit, "esc + enter" to send content, "enter" to new line! </style></b>'
             ),
         )
+
+    def load_words(self, path: str) -> list[str]:
+        with open(file=path, mode="r") as file:
+            word_list = list(file.read().split())
+
+        return word_list
 
     def multiple_input(self) -> str:
         """
@@ -127,33 +134,46 @@ class History:
 
     def print_blue(self, text: str) -> None:
         """
-        Print text in blue color.
+        Print text in blue color using prompt_toolkit's HTML formatting.
 
         Parameters:
             text (str): The text to be printed in blue.
+
+        Implementation:
+            Uses prompt_toolkit's print_formatted_text with HTML styling
+            for consistent blue text display across different terminals.
         """
-        print(f"\033[34m{text}\033[0m")
+
+        formatted_text = f"<label>{text}</label>"
+
+        print_formatted_text(
+            HTML(formatted_text),
+            style=self.custom_style,
+            flush=True,
+        )
 
 
 if __name__ == "__main__":
     # Initialize the conversation history instance
     history = History()
+    interaction = Interaction()
 
     # Print welcome message and instructions
-    history.print_blue(
-        """>>> Welcome to the deep-chat AI agent <<<
+    interaction.print_blue(
+        """===================Welcome to the deep-chat AI agent====================
 
 """
     )
 
     while True:
         # Retrieve user input using the history's multiple_input method
-        content = history.multiple_input().strip()
+        content = interaction.multiple_input().strip()
 
         # Check if the user wants to quit the chat
         if content.lower() in ["quit", "q"]:
-            print("agent: Goodbye!")
             break  # Exit the loop and terminate the chat
         else:
             # Start a new DeepChat instance with the provided user input
             DeepChat(content, history)
+
+    print("agent: Goodbye!")
