@@ -41,7 +41,7 @@ class DeepChat:
         """
         # Initialize the OpenAI client with API key and base URL
         client = OpenAI(
-            api_key="sk-1bbdf27b31ff40f385c6b3b54f8c16d2",
+            api_key="xxx",
             base_url="https://api.deepseek.com",
         )
         # Request the chat completion response
